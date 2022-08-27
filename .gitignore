@@ -1,0 +1,5 @@
+venv
+data/*
+cleaned/*
+*.json
+*.pyc
