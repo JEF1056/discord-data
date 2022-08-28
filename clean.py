@@ -187,7 +187,7 @@ def create_dataset(c):
                 for name in names:
                     pairs.append(dict(
                         id=message['id'],
-                        ref_id=context['id'],
+                        ref_id=message["refs"],
                         persona = p,
                         question = f"{name}: {context['content']}",
                         answer = message['content']
@@ -197,7 +197,7 @@ def create_dataset(c):
         for name in names:
             pairs_nopersona.append(dict(
                 id=message['id'],
-                ref_id=context['id'],
+                ref_id=message["refs"],
                 question = f"{name}: {context['content']}",
                 answer = message['content']
             ))

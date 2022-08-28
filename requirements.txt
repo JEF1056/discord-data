@@ -1,5 +1,4 @@
 ijson
 tqdm
 dataset
-datafreeze
-normality
+psycopg2-binary

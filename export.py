@@ -7,12 +7,11 @@ db_url = "postgresql://admin:r3wyhgifqloprm9u0iqh4t89qu2evrq2gie8rd9uj23rlhf8q3u
 
 db = dataset.connect(db_url)
 
-with open('dataset_train.json', "w") as train, open('dataset_validation.json', "w") as valid:
-    ds = db['dataset']
-    for line in tqdm(ds.all(), total=ds.count(), desc="dataset"):
-        random.choices([train, valid], weights=[0.9, 0.1])[0].write(json.dumps(dict(line))+"\n")
-
-with open('dataset_nopersona_train.json', "w") as train, open('dataset_nopersona_validation.json', "w") as valid:
-    ds = db['dataset_nopersona']
-    for line in tqdm(ds.all(), total=ds.count(), desc="dataset_nopersona"):
-        random.choices([train, valid], weights=[0.9, 0.1])[0].write(json.dumps(dict(line))+"\n")
+for dataset in ["dataset", "dataset_nopersona"]:
+    with open(f'{dataset}_train.json', "w") as train, open(f'{dataset}_validation.json', "w") as valid:
+        ds = db[dataset]
+        distinct_questions = ds.distinct("ref_id", "answer")
+        for question in [ref_id["ref_id"] for ref_id in ds.distinct("ref_id")]:
+            result = ds.query("SELECT DISTINCT ref_id, ")
+            for line in tqdm(ds.all(), total=ds.count(), desc="dataset"):
+                random.choices([train, valid], weights=[0.9, 0.1])[0].write(json.dumps(dict(line))+"\n")
