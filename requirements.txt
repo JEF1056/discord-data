@@ -2,3 +2,6 @@ ijson
 tqdm
 dataset
 psycopg2-binary
+transformers
+datasets >= 1.8.0
+evaluate
