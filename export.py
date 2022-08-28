@@ -9,6 +9,8 @@ db = dataset.connect(db_url)
 
 version = "v0.1"
 
+counter = 0
+
 for dataset in ["dataset", "dataset_nopersona"]:
     train = {
         "version": version,
@@ -36,9 +38,11 @@ for dataset in ["dataset", "dataset_nopersona"]:
 
     for question in tqdm(distinct_questions, desc=dataset):
         line = dict(question)
+        line["id"] = counter
         line["answers"]=dict(text=distinct_answers[question["ref_id"]])
 
         random.choices([train, valid], weights=[0.9, 0.1])[0]["data"].append(line)
+        counter += 1
 
     json.dump(train, open(f"{dataset}_train.json", "w"))
     json.dump(valid, open(f"{dataset}_validation.json", "w"))
