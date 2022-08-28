@@ -48,6 +48,7 @@ def clean(text, author=None, author_id=False):
     if text.lower() == "welc" or ("welcome" in text.lower()): return None #welcome is the bane of exisitence and needs to be culled
     if "@everyone" in text.lower() or "@here" in text.lower(): return None #no need for these kinds of pings, and messages in them are even more useless.
     if text.strip().lower().startswith(bot_prefixes): return None #handle bot commands
+    if "dr k" in text.lower() or "doctor k" in text.lower(): return None
 
     if author and author_id:
         author = author.replace(":", "").strip()

@@ -1,0 +1,17 @@
+python3 train.py \
+    --model_name_or_path t5-small \
+    --do_train \
+    --do_eval \
+    --train_file ... \
+    --validation_file ... \
+    --output_dir tst-model \
+    --overwrite_output_dir \
+    --per_device_train_batch_size=4 \
+    --per_device_eval_batch_size=4 \
+    --learning_rate 3e-5 \
+    --num_train_epochs 2 \
+    --max_seq_length 512 \
+    --predict_with_generate
+    --context_column persona \
+    --question_column question \
+    --answer_column answer \

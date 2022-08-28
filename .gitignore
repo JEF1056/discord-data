@@ -3,3 +3,5 @@ data/*
 cleaned/*
 *.json
 *.pyc
+*.txt
+exporter/*

@@ -7,6 +7,7 @@ import multiprocessing
 import concurrent.futures
 from src.helpers import clean
 
+max_length = 512
 data_folder = "data"
 cache_folder = "cleaned"
 processing_cores = math.ceil(multiprocessing.cpu_count() * 0.6875)
@@ -43,7 +44,7 @@ def cache_users(path):
             # - author is a bot
             # - author's name is too long
             if (len(message["content"]) < 100 or
-                len(message["content"]) > 900 or
+                len(message["content"]) > max_length*0.95 or
                 message["embeds"] != [] or
                 message["type"] != "Default" or
                 message["author"]["isBot"] == True or
@@ -64,7 +65,7 @@ def cache_users(path):
                     name=cleaned_name
                 ))
 
-            if len(cleaned_message) < 1000:
+            if len(cleaned_message) < max_length:
                 personas.append(dict(
                     id=message['author']['id'],
                     persona=cleaned_message
@@ -97,7 +98,7 @@ def cache_messages(path):
             # - author is a bot
             # - author is a "Deleted User"
             # - author's name is too long
-            if (len(message["content"]) > 900 or
+            if (len(message["content"]) > max_length*0.95 or
                 len(message["content"]) <= 1 or
                 message["embeds"] != [] or
                 message["type"] not in ["Default", "Reply"] or
@@ -119,7 +120,7 @@ def cache_messages(path):
                     name=cleaned_name
                 ))
 
-            if len(cleaned_message) < 1000:
+            if len(cleaned_message) < max_length:
                 if message["type"] == "Reply":
                     msgs.append(dict(
                         id=message['id'],
@@ -185,16 +186,18 @@ def create_dataset(c):
             for p in persona:
                 for name in names:
                     pairs.append(dict(
+                        id=message['id'],
                         persona = p,
-                        context = f"{name}: {context['content']}",
-                        target = message['content']
+                        question = f"{name}: {context['content']}",
+                        answer = message['content']
                     ))
         except KeyError: pass
 
         for name in names:
             pairs_nopersona.append(dict(
-                context = f"{name}: {context['content']}",
-                target = message['content']
+                id=message['id'],
+                question = f"{name}: {context['content']}",
+                answer = message['content']
             ))
 
     # Insert in bulk
@@ -205,24 +208,25 @@ def create_dataset(c):
 
     return messages_processed
 
-
 if __name__ == "__main__":
     db = dataset.connect(db_url)
 
     # Create status table, clear dataset
-    db.query("""
+    db.query(f"""
     DROP TABLE IF EXISTS dataset;
     DROP TABLE IF EXISTS dataset_nopersona;
 
     CREATE TABLE dataset (
-        persona VARCHAR(1000) NOT NULL,
-        context VARCHAR(1000) NOT NULL,
-        target VARCHAR(1000) NOT NULL
+        id BIGINT NOT NULL,
+        persona VARCHAR({max_length}) NOT NULL,
+        question VARCHAR({max_length}) NOT NULL,
+        answer VARCHAR({max_length}) NOT NULL
     );
 
     CREATE TABLE dataset_nopersona (
-        context VARCHAR(1000) NOT NULL,
-        target VARCHAR(1000) NOT NULL
+        id BIGINT NOT NULL,
+        question VARCHAR({max_length}) NOT NULL,
+        answer VARCHAR({max_length}) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS status (
@@ -246,7 +250,7 @@ if __name__ == "__main__":
             )
         ], ["ref"])
 
-        db.query("""
+        db.query(f"""
         DROP TABLE IF EXISTS personas_temp;
         DROP TABLE IF EXISTS personas;
         DROP TABLE IF EXISTS names_temp;
@@ -254,7 +258,7 @@ if __name__ == "__main__":
 
         CREATE TABLE personas_temp (
             id BIGINT NOT NULL,
-            persona VARCHAR(1000) NOT NULL
+            persona VARCHAR({max_length}) NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS names_temp (
@@ -300,7 +304,7 @@ if __name__ == "__main__":
             ok = False
         ), ["ref"])
 
-        db.query("""
+        db.query(f"""
         DROP TABLE IF EXISTS messages_temp;
         DROP TABLE IF EXISTS messages;
         DROP TABLE IF EXISTS names_temp;
@@ -310,7 +314,7 @@ if __name__ == "__main__":
             id BIGINT NOT NULL,
             author_id BIGINT NOT NULL,
             refs BIGINT,
-            content VARCHAR(1000) NOT NULL
+            content VARCHAR({max_length}) NOT NULL
         );
 
         CREATE TABLE IF NOT EXISTS names_temp (
