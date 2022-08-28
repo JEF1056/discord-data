@@ -10,7 +10,7 @@ normalize_chars={'Š':'S', 'š':'s', 'Ð':'Dj','Ž':'Z', 'ž':'z', 'À':'A', 'Á
     'ă':'a', 'î':'i', 'â':'a', 'ș':'s', 'ț':'t', 'Ă':'A', 'Î':'I', 'Â':'A', 'Ș':'S', 'Ț':'T',}
 alphabets=io.open("src/alphabets.txt", mode="r", encoding="utf-8").read().strip().split("\n")
 badwords=io.open("src/badwords.txt", mode="r", encoding="utf-8").read().strip().split("\n")
-emojis=json.load(io.open("src/emojis.json", mode="r", encoding="utf-8"))
+emojis=json.load(io.open("src/emojis.txt", mode="r", encoding="utf-8"))
 for alphabet in alphabets[1:]:
     for ind, char in enumerate(alphabet):
         try:normalize_chars[char]=alphabets[0][ind]
