@@ -187,6 +187,7 @@ def create_dataset(c):
                 for name in names:
                     pairs.append(dict(
                         id=message['id'],
+                        ref_id=context['id'],
                         persona = p,
                         question = f"{name}: {context['content']}",
                         answer = message['content']
@@ -196,6 +197,7 @@ def create_dataset(c):
         for name in names:
             pairs_nopersona.append(dict(
                 id=message['id'],
+                ref_id=context['id'],
                 question = f"{name}: {context['content']}",
                 answer = message['content']
             ))
@@ -218,6 +220,7 @@ if __name__ == "__main__":
 
     CREATE TABLE dataset (
         id BIGINT NOT NULL,
+        ref_id BIGINT NOT NULL,
         persona VARCHAR({max_length}) NOT NULL,
         question VARCHAR({max_length}) NOT NULL,
         answer VARCHAR({max_length}) NOT NULL
@@ -225,6 +228,7 @@ if __name__ == "__main__":
 
     CREATE TABLE dataset_nopersona (
         id BIGINT NOT NULL,
+        ref_id BIGINT NOT NULL,
         question VARCHAR({max_length}) NOT NULL,
         answer VARCHAR({max_length}) NOT NULL
     );
