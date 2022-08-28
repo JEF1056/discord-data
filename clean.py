@@ -27,11 +27,13 @@ def chunk(arr, arr_len, n):
     return (arr[i:i+chunk_size] for i in range(0, arr_len, chunk_size)), math.ceil(arr_len/chunk_size)
 
 def cache_users(path):
+    db = dataset.connect(db_url)
+
     messages_processed = 0
     names = []
     personas = []
 
-    with open(os.path.join(data_folder, "intros", path), "r") as f, dataset.connect(db_url) as db:
+    with open(os.path.join(data_folder, "intros", path), "r") as f:
         messages = ijson.items(f, 'messages.item')
         for message in messages:
             # Ignore if content is:
@@ -74,14 +76,18 @@ def cache_users(path):
         db["names_temp"].insert_many(names, chunk_size=50_000)
         db["personas_temp"].insert_many(personas, chunk_size=50_000)
 
+    db.close()
+
     return messages_processed
 
 def cache_messages(path):
+    db = dataset.connect(db_url)
+
     messages_processed = 0
     names = []
     msgs = []
 
-    with open(os.path.join(data_folder, "content", path), "r") as f, dataset.connect(db_url) as db:
+    with open(os.path.join(data_folder, "content", path), "r") as f:
         messages = ijson.items(f, 'messages.item')
         for message in messages:
             # Ignore if content is:
@@ -133,6 +139,8 @@ def cache_messages(path):
         # Insert in bulk
         db["names_temp"].insert_many(names, chunk_size=100_000)
         db["messages_temp"].insert_many(msgs, chunk_size=100_000)
+
+    db.close()
 
     return messages_processed
 
@@ -193,14 +201,30 @@ def create_dataset(c):
     db["dataset"].insert_many(pairs, chunk_size=100_000)
     db["dataset_nopersona"].insert_many(pairs_nopersona, chunk_size=100_000)
 
+    db.close()
+
     return messages_processed
 
 
 if __name__ == "__main__":
     db = dataset.connect(db_url)
 
-    # Create status table
+    # Create status table, clear dataset
     db.query("""
+    DROP TABLE IF EXISTS dataset;
+    DROP TABLE IF EXISTS dataset_nopersona;
+
+    CREATE TABLE dataset (
+        persona VARCHAR(1000) NOT NULL,
+        context VARCHAR(1000) NOT NULL,
+        target VARCHAR(1000) NOT NULL
+    );
+
+    CREATE TABLE dataset_nopersona (
+        context VARCHAR(1000) NOT NULL,
+        target VARCHAR(1000) NOT NULL
+    );
+
     CREATE TABLE IF NOT EXISTS status (
         ref VARCHAR(100) PRIMARY KEY,
         ok BOOL
@@ -324,13 +348,7 @@ if __name__ == "__main__":
 
     messages = db["messages"]
 
-    db.query("DROP TABLE IF EXISTS dataset;")
-    db.query("DROP TABLE IF EXISTS dataset_nopersona;")
-
-    tasks, total_tasks = chunk(messages.find(refs={"not": None}),  messages.count(refs={"not": None}), processing_cores*8)
-    # total = []
-    # for t in tqdm(tasks, total=total_tasks):
-    #     total.append(create_dataset(t))
+    tasks, total_tasks = chunk(messages.find(refs={"not": None}),  messages.count(refs={"not": None}), processing_cores*24)
     with concurrent.futures.ProcessPoolExecutor(max_workers=processing_cores) as executor:
         total = list(tqdm(executor.map(create_dataset, tasks), total=total_tasks, desc="Creating dataset..."))
 
@@ -340,31 +358,3 @@ if __name__ == "__main__":
     expected: {messages.count(refs={"not": None})}
     processed: {sum(total)}
     """)
-
-    # for message in tqdm(messages.find(refs={"not": None}), total = messages.count(refs={"not": None}), desc="Creating dataset..."):
-    #     # Gather info about the current message;
-    #     message = dict(message)
-    #     author_personas = [i["persona"] for i in personas.find(id=message["author_id"])]
-
-    #     # Gather info about the reference message
-    #     reference = messages.find_one(id=message["refs"])
-    #     reference = dict(reference) if reference else None
-    #     reference_author_names = [i["name"] for i in names.find(id=reference["author_id"])] if reference else []
-
-    #     for persona in author_personas:
-    #         for name in reference_author_names:
-    #             pairs.append(dict(
-    #                 persona = persona,
-    #                 context = f"{name}: {reference['content']}",
-    #                 target = message['content']
-    #             ))
-    #             kept+=1
-
-    #     for name in reference_author_names:
-    #         pairs_nopersona.append(dict(
-    #             context = f"{name}: {reference['content']}",
-    #             target = message['content']
-    #         ))
-    #         kept_nopersona+=1
-
-    #     total += 1
