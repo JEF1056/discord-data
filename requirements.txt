@@ -2,6 +2,6 @@ ijson
 tqdm
 dataset
 psycopg2-binary
-transformers
+git+https://github.com/huggingface/transformers
 datasets >= 1.8.0
 evaluate
