@@ -400,7 +400,7 @@ def main():
                 f"--question_column' value '{data_args.question_column}' needs to be one of: {', '.join(column_names)}"
             )
     if data_args.context_column is None:
-        context_column = dataset_columns[1] if dataset_columns is not None else column_names[1]
+        context_column = ""
     else:
         context_column = data_args.context_column
         if context_column not in column_names:
@@ -436,17 +436,23 @@ def main():
     def preprocess_squad_batch(
         examples,
         question_column: str,
-        context_column: str,
+        context_column,
         answer_column: str,
     ) -> Tuple[List[str], List[str]]:
         questions = examples[question_column]
-        contexts = examples[context_column]
         answers = examples[answer_column]
+        if context_column: contexts = examples[context_column]
 
         def generate_input(_question, _context):
-            return " ".join(["question:", _question.lstrip(), "context:", _context.lstrip()])
+            if _context:
+                return " ".join(["question:", _question.lstrip(), "context:", _context.lstrip()])
+            else:
+                return "question: " + _question.lstrip()
 
-        inputs = [generate_input(question, context) for question, context in zip(questions, contexts)]
+        if context_column:
+            inputs = [generate_input(question, context) for question, context in zip(questions, contexts)]
+        else:
+            inputs = [generate_input(question, None) for question in questions]
         targets = [answer["text"][0] if len(answer["text"]) > 0 else "" for answer in answers]
         return inputs, targets
 
