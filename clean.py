@@ -65,7 +65,7 @@ def cache_users(path):
                     name=cleaned_name
                 ))
 
-            if len(cleaned_message) < max_length:
+            if len(cleaned_message) < max_length * 0.95:
                 personas.append(dict(
                     id=message['author']['id'],
                     persona=cleaned_message
@@ -120,7 +120,7 @@ def cache_messages(path):
                     name=cleaned_name
                 ))
 
-            if len(cleaned_message) < max_length:
+            if len(cleaned_message) < max_length * 0.95:
                 if message["type"] == "Reply":
                     msgs.append(dict(
                         id=message['id'],
