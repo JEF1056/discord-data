@@ -178,29 +178,42 @@ def create_dataset(c):
 
         try:
             context = references[message["refs"]]
-            names = reference_author_names[context["name"]]
+            # names = reference_author_names[context["name"]]
         except KeyError:  continue
 
         try:
             persona = personas[message["author_id"]]
             for p in persona:
-                for name in names:
-                    pairs.append(dict(
-                        id=message['id'],
-                        ref_id=message["refs"],
-                        persona = p,
-                        question = f"{name}: {context['content']}",
-                        answer = message['content']
-                    ))
+                # for name in names:
+                #     pairs.append(dict(
+                #         id=message['id'],
+                #         ref_id=message["refs"],
+                #         persona = p,
+                #         question = f"{name}: {context['content']}",
+                #         answer = message['content']
+                #     ))
+                pairs.append(dict(
+                    id=message['id'],
+                    ref_id=message["refs"],
+                    persona = p,
+                    question = context['content'],
+                    answer = message['content']
+                ))
         except KeyError: pass
 
-        for name in names:
-            pairs_nopersona.append(dict(
-                id=message['id'],
-                ref_id=message["refs"],
-                question = f"{name}: {context['content']}",
-                answer = message['content']
-            ))
+        # for name in names:
+        #     pairs_nopersona.append(dict(
+        #         id=message['id'],
+        #         ref_id=message["refs"],
+        #         question = f"{name}: {context['content']}",
+        #         answer = message['content']
+        #     ))
+        pairs_nopersona.append(dict(
+            id=message['id'],
+            ref_id=message["refs"],
+            question = context['content'],
+            answer = message['content']
+        ))
 
     # Insert in bulk
     db["dataset"].insert_many(pairs, chunk_size=100_000)

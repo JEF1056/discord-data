@@ -6,4 +6,5 @@ cleaned/*
 exporter/*
 channels.txt
 users.txt
-*model*
+tst-*
+export/*

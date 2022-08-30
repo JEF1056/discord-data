@@ -399,8 +399,8 @@ def main():
             raise ValueError(
                 f"--question_column' value '{data_args.question_column}' needs to be one of: {', '.join(column_names)}"
             )
-    if data_args.context_column is None:
-        context_column = ""
+    if data_args.context_column == "None":
+        context_column = None
     else:
         context_column = data_args.context_column
         if context_column not in column_names:
@@ -445,9 +445,9 @@ def main():
 
         def generate_input(_question, _context):
             if _context:
-                return " ".join(["question:", _question.lstrip(), "context:", _context.lstrip()])
+                return f"question: {_question.lstrip()} context: {_context.lstrip()}"
             else:
-                return "question: " + _question.lstrip()
+                return f"question: {_question.lstrip()}"
 
         if context_column:
             inputs = [generate_input(question, context) for question, context in zip(questions, contexts)]
